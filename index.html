@@ -82,6 +82,7 @@
     button.primary,.fileBtn.primary{background:linear-gradient(135deg,rgba(73,212,157,.95),rgba(106,167,255,.85));border-color:transparent;color:#06100d;box-shadow:0 14px 30px rgba(73,212,157,.15)}
     #encryptBtn{background:linear-gradient(135deg,rgba(245,197,66,.96),rgba(255,135,66,.88));border-color:transparent;color:#1b1000;box-shadow:0 14px 30px rgba(245,197,66,.14)}
     button.danger{background:rgba(255,93,108,.13);border-color:rgba(255,93,108,.36);color:#ffd7db}
+    #resetAllBtn{background:linear-gradient(135deg,rgba(20,184,166,.22),rgba(56,189,248,.18));border-color:rgba(56,189,248,.42);color:#c8fbff;box-shadow:0 10px 24px rgba(20,184,166,.10)}
     button.small{padding:7px 10px;border-radius:10px;font-size:12px}
     button.active{background:#f4f7fb;color:#080b12;border-color:#f4f7fb}
     .grid{display:grid;grid-template-columns:1fr;gap:16px}
@@ -138,6 +139,7 @@
     .iconBtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0;border-radius:14px}
     .iconBtn svg{width:21px;height:21px;display:block}
     .headerActions{display:flex;gap:10px;align-items:center}
+    body.home #resetAllBtn{display:none!important}
     .fullBtn{width:100%;display:flex;align-items:center;justify-content:center}
     .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
     .card,.qItem,.entryItem{border:1px solid rgba(106,167,255,.28);background:linear-gradient(180deg,rgba(13,20,33,.98),rgba(7,10,16,.96));border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
@@ -159,10 +161,10 @@
     .searchBox{margin:12px 0 12px}
     .entrySearchBox label{color:#9fc8ff}
     .serviceList{display:flex;flex-direction:column;gap:8px;margin-top:10px;overflow:auto;min-height:0;padding:4px 4px 0 0}
-    .serviceBtn{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;background:rgba(255,255,255,.055);border-color:rgba(106,167,255,.25);color:#fff}
-    .serviceBtn span{font-weight:900;word-break:break-word}
+    .serviceBtn{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;color:#fff;border:1px solid rgba(106,167,255,.28);background:linear-gradient(180deg,rgba(13,20,33,.98),rgba(7,10,16,.96));border-radius:15px;padding:10px 12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+    .serviceBtn span{font-weight:950;word-break:break-word;color:#f5c542;font-size:15px;letter-spacing:.02em}
     .serviceBtn small{color:var(--muted);font-weight:800;margin-left:12px;white-space:nowrap}
-    .serviceBtn.active{border-color:rgba(106,167,255,.85);background:rgba(106,167,255,.16);color:#ffffff}
+    .serviceBtn.active{border-color:rgba(106,167,255,.72);background:linear-gradient(180deg,rgba(18,31,52,.98),rgba(8,14,24,.96));color:#ffffff}
     .serviceBtn.active span{color:#ffffff}
     .detailCard{margin-top:12px}
     #decryptedList{min-height:0;overflow:auto;padding-right:4px;flex:1 1 auto}
@@ -191,16 +193,23 @@
     .mobileEditTabs{display:none}
     @media(max-width:899px){
       body{min-height:100dvh;overflow:hidden}
-      header{padding:calc(16px + env(safe-area-inset-top)) 14px 8px;align-items:center}
+      header{padding:calc(16px + env(safe-area-inset-top)) 14px 8px;align-items:center;justify-content:space-between;position:relative}
       h1{font-size:32px;letter-spacing:-.055em}
-      .brandTitle{gap:8px}
+      header>div:first-child{display:block;width:auto}
+      .brandTitle{flex-direction:row;justify-content:flex-start;text-align:left;gap:8px}
+      .brandTitle svg{width:.86em;height:.86em}
+      body.home header{justify-content:center}
+      body.home header>div:first-child{display:flex;justify-content:center;width:100%}
+      body.home .brandTitle{flex-direction:column-reverse;justify-content:center;text-align:center;gap:8px}
+      body.home .brandTitle svg{width:118px;height:118px}
+      .headerActions{position:absolute;right:14px;top:calc(16px + env(safe-area-inset-top));gap:8px}
       .sub{display:none}
       main{height:calc(100dvh - 74px - env(safe-area-inset-top));padding:10px 12px calc(12px + env(safe-area-inset-bottom));overflow:hidden}
       .grid{gap:10px}
       .grid.two{grid-template-columns:1fr}
       #openView,#createView{height:100%;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
-      #openView:not(:has(#questionsBox:not(.hidden))):not(:has(#resultsPanel:not(.hidden))){grid-template-rows:auto auto;align-content:center;gap:112px}
-      #openView:not(:has(#questionsBox:not(.hidden))):not(:has(#resultsPanel:not(.hidden)))>section{height:auto;min-height:0;padding:14px}
+      #openView:not(:has(#questionsBox:not(.hidden))):not(:has(#resultsPanel:not(.hidden))){grid-template-rows:auto auto;align-content:start;gap:46px;padding-top:34px}
+      #openView:not(:has(#questionsBox:not(.hidden))):not(:has(#resultsPanel:not(.hidden)))>section{height:auto;min-height:0;padding:14px;margin-bottom:8px}
       #createView{grid-template-rows:auto minmax(0,1fr)}
       section{max-height:none;height:100%;padding:14px;border-radius:18px}
       .mobileEditTabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px;border:1px solid rgba(255,255,255,.13);border-radius:16px;background:rgba(255,255,255,.055)}
@@ -260,7 +269,6 @@
       .safeClosedArt svg{width:min(150px,62%)}
       .safeOpenArt{min-height:92px;padding-top:6px}
       .safeOpenArt svg{width:min(150px,62%)}
-      .headerActions{gap:8px}
       #modeSwitchBtn{min-height:42px;padding:10px 12px}
       .iconBtn{width:42px;height:42px}
     }
@@ -281,7 +289,7 @@
     input[type="file"]{display:none}
   </style>
 </head>
-<body>
+<body class="home">
   <header>
     <div>
       <h1 class="brandTitle">
@@ -595,6 +603,7 @@
     }
 
     function showCreate(){
+      document.body.classList.remove('home');
       $('#openView').classList.add('hidden');
       $('#createView').classList.remove('hidden');
     }
@@ -892,6 +901,7 @@
 
     function resetAll(){
       loadedVault = null;
+      document.body.classList.add('home');
       currentLayer = null;
       openedLayers = [];
       unlockedVaultData = null;
@@ -1021,6 +1031,7 @@
 
     $('#vaultFile').addEventListener('change', async (ev) => {
       const file = ev.target.files && ev.target.files[0];
+      document.body.classList.toggle('home', !file);
       loadedVault = null;
       currentLayer = null;
       openedLayers = [];
