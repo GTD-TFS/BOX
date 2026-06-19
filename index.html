@@ -5,10 +5,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-  <title>Caja segura</title>
+  <title>Safe box</title>
   <meta name="theme-color" content="#080b12">
-  <meta name="application-name" content="Caja segura">
-  <meta name="apple-mobile-web-app-title" content="Caja segura">
+  <meta name="application-name" content="Safe box">
+  <meta name="apple-mobile-web-app-title" content="Safe box">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
@@ -49,6 +49,8 @@
       gap:18px;
     }
     h1{margin:0;font-size:clamp(34px,5vw,58px);letter-spacing:-.07em;line-height:.92}
+    .brandTitle{display:flex;align-items:center;gap:12px}
+    .brandTitle svg{width:.86em;height:.86em;flex:0 0 auto;filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))}
     .sub{margin:8px 0 0;color:var(--muted);line-height:1.35;max-width:430px;font-size:14px}
     main{max-width:1040px;margin:0 auto;padding:18px 22px 38px}
     .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px;background:rgba(255,255,255,.045);white-space:nowrap}
@@ -119,6 +121,11 @@
     }
     textarea{min-height:92px;resize:vertical;line-height:1.45}
     input:focus,textarea:focus,select:focus{border-color:rgba(73,212,157,.85);box-shadow:0 0 0 3px rgba(73,212,157,.14),inset 0 0 0 1px rgba(255,255,255,.04)}
+    .filenameInput{display:flex;align-items:stretch;border:1px solid rgba(106,167,255,.32);border-radius:15px;background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.035));overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.035);backdrop-filter:blur(10px) saturate(135%)}
+    .filenameInput:focus-within{border-color:rgba(73,212,157,.85);box-shadow:0 0 0 3px rgba(73,212,157,.14),inset 0 0 0 1px rgba(255,255,255,.04)}
+    .filenameInput input{border:0;border-radius:0;background:rgba(5,8,15,.72);box-shadow:none;min-width:0}
+    .filenameInput input:focus{border:0;box-shadow:none}
+    .fileSuffix{display:flex;align-items:center;padding:0 14px;border-left:1px solid rgba(255,255,255,.13);background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.06));color:#b9c9dc;font-weight:950;font-size:13px;white-space:nowrap;user-select:none;backdrop-filter:blur(10px) saturate(140%)}
     .row{display:grid;grid-template-columns:1fr;gap:10px}
     @media(min-width:720px){.row.cols2{grid-template-columns:1fr 1fr}}
     .muted{color:var(--muted);font-size:13px;line-height:1.4}
@@ -186,6 +193,7 @@
       body{min-height:100dvh;overflow:hidden}
       header{padding:calc(16px + env(safe-area-inset-top)) 14px 8px;align-items:center}
       h1{font-size:32px;letter-spacing:-.055em}
+      .brandTitle{gap:8px}
       .sub{display:none}
       main{height:calc(100dvh - 74px - env(safe-area-inset-top));padding:10px 12px calc(12px + env(safe-area-inset-bottom));overflow:hidden}
       .grid{gap:10px}
@@ -222,10 +230,16 @@
       #openView>section:has(#decryptedList:not(:empty)) button.small{padding:6px 8px;font-size:11px;border-radius:9px}
       #openView>section:has(#decryptedList:not(:empty)) label{margin:6px 0 4px;font-size:10px;letter-spacing:.06em}
       #openView>section:has(#decryptedList:not(:empty)) .secret{padding:6px 7px;border-radius:9px;font-size:12px;line-height:1.25}
-      #safeOpenDock{display:none!important}
+      #safeOpenDock{min-height:120px;margin:auto 0;align-items:center}
+      #safeOpenDock.hidden{display:none!important}
+      #safeOpenDock svg{width:min(190px,72%)}
+      #openView>section:has(#decryptedList:not(:empty)) #safeOpenDock{display:none!important}
       #openView>section{min-height:0}
       #openView .fileBtn.primary,#openView .fullBtn{min-height:54px;font-size:16px}
       input,textarea,select{font-size:16px;padding:12px 13px;border-radius:13px}
+      .filenameInput{border-radius:13px}
+      .filenameInput input{font-size:16px;padding:12px 13px}
+      .fileSuffix{padding:0 10px;font-size:12px}
       button,.fileBtn{font-size:15px;padding:11px 12px;border-radius:13px}
       h2{font-size:21px;margin-bottom:12px}
       h3{font-size:14px;margin:16px 0 10px}
@@ -268,7 +282,16 @@
 <body>
   <header>
     <div>
-      <h1>Caja segura</h1>
+      <h1 class="brandTitle">
+        <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+          <rect width="512" height="512" rx="112" fill="#080b12"/>
+          <rect x="104" y="126" width="304" height="250" rx="42" fill="#111723" stroke="#6aa7ff" stroke-width="18"/>
+          <circle cx="256" cy="252" r="58" fill="#05080f" stroke="#49d49d" stroke-width="18"/>
+          <circle cx="256" cy="252" r="22" fill="#49d49d"/>
+          <path d="M168 156h176M168 348h94" stroke="#f5c542" stroke-width="22" stroke-linecap="round"/>
+        </svg>
+        <span>Safe box</span>
+      </h1>
       <p class="sub">Tus claves en un archivo cifrado.</p>
     </div>
     <div class="headerActions">
@@ -397,7 +420,10 @@
         <h2>Nueva caja</h2>
 
         <label>Nombre</label>
-        <input id="vaultName">
+        <div class="filenameInput">
+          <input id="vaultName">
+          <span class="fileSuffix">.json</span>
+        </div>
 
 
         <h3>Preguntas</h3>
@@ -700,7 +726,10 @@
         btn.addEventListener('click', (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
-          state.entries.splice(Number(btn.dataset.removeEntry), 1);
+          const idx = Number(btn.dataset.removeEntry);
+          const title = state.entries[idx]?.title?.trim() || `Secreto ${idx + 1}`;
+          if(!confirm(`¿Eliminar el secreto "${title}"?`)) return;
+          state.entries.splice(idx, 1);
           renderEntryEditor();
         });
       });
@@ -774,7 +803,8 @@
         return;
       }
 
-      let selectedIndex = 0;
+      const mobileStartsWithSafe = window.matchMedia('(max-width:899px)').matches;
+      let selectedIndex = mobileStartsWithSafe ? -1 : 0;
 
       function renderDetail(entry){
         detailBox.innerHTML = `
@@ -818,7 +848,7 @@
           return;
         }
 
-        if(!filtered[selectedIndex]) selectedIndex = 0;
+        if(selectedIndex !== -1 && !filtered[selectedIndex]) selectedIndex = 0;
 
         filtered.forEach((entry, idx) => {
           const btn = document.createElement('button');
@@ -833,12 +863,16 @@
           serviceList.appendChild(btn);
         });
 
-        renderDetail(filtered[selectedIndex]);
+        if(selectedIndex >= 0){
+          renderDetail(filtered[selectedIndex]);
+        }else{
+          detailBox.innerHTML = '';
+        }
       }
 
       search.value = '';
       search.addEventListener('input', () => {
-        selectedIndex = 0;
+        selectedIndex = mobileStartsWithSafe ? -1 : 0;
         renderList();
       });
       renderList();
@@ -967,15 +1001,15 @@
       if(error){ setStatus($('#createStatus'), error, 'bad'); return; }
       setStatus($('#createStatus'), 'Cifrando por capas...', '');
       try{
-        const name = $('#vaultName').value.trim() || 'Caja segura';
+        const name = $('#vaultName').value.trim() || 'Safe box';
         const questions = state.questions.map(q => q.question.trim());
         const answers = state.questions.map(q => q.answer);
         const entries = state.entries
           .filter(e => e.title.trim() || e.user.trim() || e.password.trim() || e.notes.trim())
           .map(e => ({ title:e.title, user:e.user, password:e.password, notes:e.notes }));
         const vault = await buildLayeredVault(name, questions, answers, entries);
-        const safe = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'caja_segura';
-        downloadJson(vault, `${safe}.vault.json`);
+        const safe = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'safe_box';
+        downloadJson(vault, `${safe}.json`);
         setStatus($('#createStatus'), 'Caja guardada por capas.', 'ok');
       }catch(err){
         console.error(err);
