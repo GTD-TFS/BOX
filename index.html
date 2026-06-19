@@ -1,3 +1,5 @@
+
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -197,6 +199,8 @@
       .grid{gap:10px}
       .grid.two{grid-template-columns:1fr}
       #openView,#createView{height:100%;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+      #openView:not(:has(#questionsBox:not(.hidden))):not(:has(#resultsPanel:not(.hidden))){grid-template-rows:auto auto;align-content:center;gap:112px}
+      #openView:not(:has(#questionsBox:not(.hidden))):not(:has(#resultsPanel:not(.hidden)))>section{height:auto;min-height:0;padding:14px}
       #createView{grid-template-rows:auto minmax(0,1fr)}
       section{max-height:none;height:100%;padding:14px;border-radius:18px}
       .mobileEditTabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px;border:1px solid rgba(255,255,255,.13);border-radius:16px;background:rgba(255,255,255,.055)}
