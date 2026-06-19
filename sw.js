@@ -1,6 +1,6 @@
 
 
-const CACHE_NAME = 'caja-segura-v5';
+const CACHE_NAME = 'caja-segura-v6';
 const APP_SHELL = [
   './',
   './index.html'
