@@ -1,0 +1,1049 @@
+
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Caja segura</title>
+  <meta name="theme-color" content="#080b12">
+  <meta name="application-name" content="Caja segura">
+  <meta name="apple-mobile-web-app-title" content="Caja segura">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23080b12'/%3E%3Crect x='104' y='126' width='304' height='250' rx='42' fill='%23111723' stroke='%236aa7ff' stroke-width='18'/%3E%3Ccircle cx='256' cy='252' r='58' fill='%2305080f' stroke='%2349d49d' stroke-width='18'/%3E%3Ccircle cx='256' cy='252' r='22' fill='%2349d49d'/%3E%3Cpath d='M168 156h176M168 348h94' stroke='%23f5c542' stroke-width='22' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23080b12'/%3E%3Crect x='104' y='126' width='304' height='250' rx='42' fill='%23111723' stroke='%236aa7ff' stroke-width='18'/%3E%3Ccircle cx='256' cy='252' r='58' fill='%2305080f' stroke='%2349d49d' stroke-width='18'/%3E%3Ccircle cx='256' cy='252' r='22' fill='%2349d49d'/%3E%3Cpath d='M168 156h176M168 348h94' stroke='%23f5c542' stroke-width='22' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <style>
+    :root{
+      --bg:#080b12;
+      --panel:#111723;
+      --card:#0c111b;
+      --text:#f4f7fb;
+      --muted:#8d99aa;
+      --line:rgba(255,255,255,.1);
+      --accent:#49d49d;
+      --accent2:#6aa7ff;
+      --danger:#ff5d6c;
+      --warn:#f5c542;
+      --radius:22px;
+      --shadow:0 20px 60px rgba(0,0,0,.38);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:linear-gradient(145deg,#070a10,#101725 58%,#08110e);
+      color:var(--text);
+    }
+    header{
+      max-width:1040px;
+      margin:0 auto;
+      padding:34px 22px 12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:18px;
+    }
+    h1{margin:0;font-size:clamp(34px,5vw,58px);letter-spacing:-.07em;line-height:.92}
+    .sub{margin:8px 0 0;color:var(--muted);line-height:1.35;max-width:430px;font-size:14px}
+    main{max-width:1040px;margin:0 auto;padding:18px 22px 38px}
+    .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px;background:rgba(255,255,255,.045);white-space:nowrap}
+    .tabs{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin:8px 0 16px;
+      padding:6px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.055);
+    }
+    button,.fileBtn{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:12px 14px;
+      font-weight:850;
+      letter-spacing:.1px;
+      cursor:pointer;
+      transition:.14s transform,.2s border,.2s background,.2s box-shadow;
+      user-select:none;
+      text-align:center;
+    }
+    button:hover,.fileBtn:hover{transform:translateY(-1px);border-color:rgba(73,212,157,.55)}
+    .serviceBtn:hover,.entryItem:hover{border-color:rgba(106,167,255,.72)!important}
+    button.primary,.fileBtn.primary{background:linear-gradient(135deg,rgba(73,212,157,.95),rgba(106,167,255,.85));border-color:transparent;color:#06100d;box-shadow:0 14px 30px rgba(73,212,157,.15)}
+    #encryptBtn{background:linear-gradient(135deg,rgba(245,197,66,.96),rgba(255,135,66,.88));border-color:transparent;color:#1b1000;box-shadow:0 14px 30px rgba(245,197,66,.14)}
+    button.danger{background:rgba(255,93,108,.13);border-color:rgba(255,93,108,.36);color:#ffd7db}
+    button.small{padding:7px 10px;border-radius:10px;font-size:12px}
+    button.active{background:#f4f7fb;color:#080b12;border-color:#f4f7fb}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px}
+    @media(min-width:900px){.grid.two{grid-template-columns:1fr 1fr}}
+    #openView{align-items:stretch}
+    #openView>section{min-height:120px;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:0}
+    #openView>section:has(#questionsBox:not(.hidden)),#openView>section:has(#decryptedList:not(:empty)){justify-content:flex-start}
+    #openView .fileBtn.primary,#openView .fullBtn{min-height:58px;display:flex;align-items:center;justify-content:center;width:100%;margin:0;font-size:15px;font-weight:850;text-transform:none;letter-spacing:.1px;line-height:1.2;font-family:inherit;padding:12px 14px}
+    section{
+      background:rgba(17,23,35,.9);
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+      overflow:hidden;
+      max-height:calc(100dvh - 168px);
+      backdrop-filter:blur(18px);
+      scrollbar-width:thin;
+      scrollbar-color:rgba(106,167,255,.45) transparent;
+    }
+    section::-webkit-scrollbar{width:8px}
+    section::-webkit-scrollbar-track{background:transparent}
+    section::-webkit-scrollbar-thumb{background:rgba(106,167,255,.35);border-radius:999px}
+    h2{margin:0 0 16px;font-size:25px;letter-spacing:-.045em;color:#ffffff;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+    h3{margin:22px 0 12px;font-size:17px;color:#6aa7ff;text-transform:uppercase;letter-spacing:.06em}
+    label{display:block;margin:12px 0 7px;color:#49d49d;font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.075em}
+    input,textarea,select{
+      width:100%;
+      border:1px solid rgba(106,167,255,.32);
+      border-radius:15px;
+      background:#05080f;
+      color:#ffffff;
+      padding:13px 14px;
+      outline:none;
+      font:inherit;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);
+    }
+    textarea{min-height:92px;resize:vertical;line-height:1.45}
+    input:focus,textarea:focus,select:focus{border-color:rgba(73,212,157,.85);box-shadow:0 0 0 3px rgba(73,212,157,.14),inset 0 0 0 1px rgba(255,255,255,.04)}
+    .row{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:720px){.row.cols2{grid-template-columns:1fr 1fr}}
+    .muted{color:var(--muted);font-size:13px;line-height:1.4}
+    .notice{border:1px solid rgba(245,197,66,.24);background:rgba(245,197,66,.08);padding:11px 12px;border-radius:15px;color:#ffe39a;line-height:1.35;font-size:13px}
+    .ok{border-color:rgba(73,212,157,.28);background:rgba(73,212,157,.08);color:#bfffea}
+    .bad{border-color:rgba(255,93,108,.28);background:rgba(255,93,108,.09);color:#ffc3ca}
+    .hidden{display:none!important}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+    .splitActions{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-top:14px;align-items:center}
+    .iconBtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0;border-radius:14px}
+    .iconBtn svg{width:21px;height:21px;display:block}
+    .headerActions{display:flex;gap:10px;align-items:center}
+    .fullBtn{width:100%;display:flex;align-items:center;justify-content:center}
+    .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+    .card,.qItem,.entryItem{border:1px solid rgba(106,167,255,.28);background:linear-gradient(180deg,rgba(13,20,33,.98),rgba(7,10,16,.96));border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+    .cardHead,.qTop{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-bottom:9px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .qTop strong{color:#f5c542;font-size:15px;letter-spacing:.02em}
+    summary.qTop{cursor:pointer;list-style:none}
+    summary.qTop::-webkit-details-marker{display:none}
+    details:not([open])>.qTop{margin-bottom:0;padding-bottom:0;border-bottom:0}
+    details:not([open]).qItem{padding-bottom:16px}
+    details:not([open]).entryItem{padding:10px 12px;margin-bottom:7px}
+    .qTop .foldHint{display:none}
+    .cardTitle{font-weight:900;font-size:16px;word-break:break-word}
+    .cardMeta{color:var(--muted);font-size:12px;margin-top:2px;word-break:break-word}
+    .secret{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#070a10;border:1px solid var(--line);border-radius:12px;padding:9px;word-break:break-all;white-space:pre-wrap}
+    .safeClosedArt{display:flex;justify-content:center;align-items:center;margin:4px 0 2px;min-height:130px}
+    .safeClosedArt svg{width:min(190px,72%);height:auto;filter:drop-shadow(0 18px 28px rgba(0,0,0,.38))}
+    .safeOpenArt{display:flex;justify-content:center;align-items:flex-end;margin:auto 0 0;min-height:132px;flex:0 0 auto;padding-top:10px}
+    .safeOpenArt svg{width:min(200px,74%);height:auto;filter:drop-shadow(0 18px 28px rgba(0,0,0,.35))}
+    .searchBox{margin:12px 0 12px}
+    .serviceList{display:flex;flex-direction:column;gap:8px;margin-top:10px;overflow:auto;min-height:0;padding:4px 4px 0 0}
+    .serviceBtn{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;background:rgba(255,255,255,.055);border-color:rgba(106,167,255,.25);color:#fff}
+    .serviceBtn span{font-weight:900;word-break:break-word}
+    .serviceBtn small{color:var(--muted);font-weight:800;margin-left:12px;white-space:nowrap}
+    .serviceBtn.active{border-color:rgba(106,167,255,.85);background:rgba(106,167,255,.16);color:#ffffff}
+    .serviceBtn.active span{color:#ffffff}
+    .detailCard{margin-top:12px}
+    #decryptedList{min-height:0;overflow:auto;padding-right:4px;flex:1 1 auto}
+    #resultsPanel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+    #resultsPanel.hidden{display:none!important}
+    #resultsPanel .searchBox{flex:0 0 auto;margin-top:0}
+    #resultsPanel .serviceList{flex:1 1 auto}
+    #openView>section:has(#resultsPanel:not(.hidden)){justify-content:flex-start;padding-top:18px}
+    #openStatus:empty{display:none}
+    #openStatus{flex:0 0 auto;margin-top:0}
+    #questionsBox + #openStatus:not(:empty){margin-top:16px}
+    .openSummary{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid rgba(73,212,157,.28);background:rgba(73,212,157,.08);color:#bfffea;border-radius:15px;padding:10px 12px;font-weight:900}
+    .openSummary small{color:#f5c542;font-weight:900;white-space:nowrap}
+    #createView>section{display:flex;flex-direction:column;min-height:0}
+    #questionEditor,#entryEditor{overflow:auto;min-height:0;padding-right:4px}
+    #questionEditor{flex:1 1 auto}
+    #entryEditor{flex:1 1 auto}
+    #createView .splitActions,#createView .actions{flex:0 0 auto}
+    .empty{border:1px dashed rgba(255,255,255,.18);border-radius:16px;padding:18px;text-align:center;color:var(--muted)}
+    .status{margin-top:12px}
+    .status:empty,#decryptedList:empty{display:none!important}
+    #createLauncher{width:100%;margin:0}
+    #openView>section>.actions:has(> .hidden:only-child){display:none!important}
+    #editUnlockedBtn{display:none!important}
+    .footerNote{margin-top:16px;color:var(--muted);font-size:12px;line-height:1.35;text-align:center}
+    @media(max-width:899px){
+      body{min-height:100dvh;overflow:hidden}
+      header{padding:calc(16px + env(safe-area-inset-top)) 14px 8px;align-items:center}
+      h1{font-size:32px;letter-spacing:-.055em}
+      .sub{display:none}
+      main{height:calc(100dvh - 74px - env(safe-area-inset-top));padding:10px 12px calc(12px + env(safe-area-inset-bottom));overflow:hidden}
+      .grid{gap:10px}
+      .grid.two{grid-template-columns:1fr}
+      #openView,#createView{height:100%;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+      section{max-height:none;height:100%;padding:14px;border-radius:18px}
+      #openView>section{min-height:0}
+      #openView .fileBtn.primary,#openView .fullBtn{min-height:54px;font-size:16px}
+      input,textarea,select{font-size:16px;padding:12px 13px;border-radius:13px}
+      button,.fileBtn{font-size:15px;padding:11px 12px;border-radius:13px}
+      h2{font-size:21px;margin-bottom:12px}
+      h3{font-size:14px;margin:16px 0 10px}
+      label{font-size:11px;margin:10px 0 6px}
+      .card,.qItem,.entryItem{border-radius:15px;padding:13px;margin-bottom:9px}
+      details:not([open]).entryItem{padding:8px 10px;margin-bottom:6px}
+      .safeClosedArt{min-height:100px}
+      .safeClosedArt svg{width:min(150px,62%)}
+      .safeOpenArt{min-height:92px;padding-top:6px}
+      .safeOpenArt svg{width:min(150px,62%)}
+      .headerActions{gap:8px}
+      #modeSwitchBtn{min-height:42px;padding:10px 12px}
+      .iconBtn{width:42px;height:42px}
+    }
+
+    @media(max-width:480px){
+      main{height:calc(100dvh - 66px - env(safe-area-inset-top))}
+      #openView,#createView{grid-template-rows:minmax(0,.95fr) minmax(0,1.05fr)}
+      .splitActions{gap:8px;justify-content:space-between}
+      .splitActions .actions{margin-top:10px}
+      #addEntryBtn,#encryptBtn,#addQuestionBtn{width:100%}
+      .actions{gap:8px}
+      .serviceBtn{padding:10px 11px}
+      .serviceBtn small{font-size:11px}
+      .openSummary{padding:9px 10px;font-size:13px}
+    }
+    input[type="file"]{display:none}
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Caja segura</h1>
+      <p class="sub">Tus claves en un archivo cifrado.</p>
+    </div>
+    <div class="headerActions">
+      <button id="modeSwitchBtn" class="primary hidden" type="button">Editar</button>
+      <button id="resetAllBtn" class="danger iconBtn" type="button" title="Vaciar" aria-label="Vaciar">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+
+
+    <div id="openView" class="grid two">
+      <section>
+        <label id="openFileBtn" class="fileBtn primary" for="vaultFile">ABRIR CAJA</label>
+        <input id="vaultFile" type="file" accept=".json,.vault,.vault.json,application/json">
+        <div id="fileInfo" class="status muted"></div>
+
+        <div id="questionsBox" class="hidden">
+          <h3>Pregunta actual</h3>
+          <div id="openQuestions"></div>
+          <div class="actions">
+            <button id="decryptBtn" class="primary" type="button">Continuar</button>
+          </div>
+        </div>
+        <div id="openStatus" class="status"></div>
+
+        <div id="resultsPanel" class="hidden">
+          <div class="searchBox">
+            <label>Buscar</label>
+            <input id="secretSearch" autocomplete="off">
+          </div>
+          <div id="serviceList" class="serviceList"></div>
+        </div>
+      </section>
+
+      <section>
+        <h2 id="rightCardTitle" class="hidden">Crear caja</h2>
+        <div id="decryptedInfo" class="muted hidden">Caja cerrada.</div>
+        <div id="safeClosedArt" class="safeClosedArt hidden" aria-label="Caja fuerte cerrada">
+          <svg viewBox="0 0 240 180" role="img" aria-hidden="true">
+            <defs>
+              <linearGradient id="safeBody" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#2b3648"/>
+                <stop offset=".48" stop-color="#111827"/>
+                <stop offset="1" stop-color="#05070c"/>
+              </linearGradient>
+              <linearGradient id="safeDoor" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#3b4c66"/>
+                <stop offset=".55" stop-color="#172033"/>
+                <stop offset="1" stop-color="#070a12"/>
+              </linearGradient>
+              <radialGradient id="dialGlow" cx="50%" cy="50%" r="60%">
+                <stop offset="0" stop-color="#7df0bf"/>
+                <stop offset=".45" stop-color="#49d49d"/>
+                <stop offset="1" stop-color="#1a6d55"/>
+              </radialGradient>
+            </defs>
+            <rect x="33" y="28" width="174" height="124" rx="20" fill="url(#safeBody)" stroke="#6aa7ff" stroke-opacity=".35" stroke-width="3"/>
+            <rect x="51" y="43" width="138" height="94" rx="15" fill="url(#safeDoor)" stroke="#ffffff" stroke-opacity=".10" stroke-width="2"/>
+            <circle cx="120" cy="90" r="27" fill="#05080f" stroke="#6aa7ff" stroke-opacity=".45" stroke-width="3"/>
+            <circle cx="120" cy="90" r="16" fill="url(#dialGlow)"/>
+            <path d="M120 77v26M107 90h26M111.5 81.5l17 17M128.5 81.5l-17 17" stroke="#06100d" stroke-width="4" stroke-linecap="round" opacity=".72"/>
+            <rect x="152" y="80" width="20" height="20" rx="5" fill="#6aa7ff" opacity=".82"/>
+            <path d="M62 58h42M62 122h28" stroke="#ffffff" stroke-opacity=".13" stroke-width="5" stroke-linecap="round"/>
+            <rect x="58" y="152" width="28" height="10" rx="4" fill="#05070c" opacity=".9"/>
+            <rect x="154" y="152" width="28" height="10" rx="4" fill="#05070c" opacity=".9"/>
+          </svg>
+        </div>
+        <div id="createLauncher">
+          <button id="startCreateBtn" class="primary fullBtn" type="button">CREAR CAJA</button>
+        </div>
+        <div id="decryptedList" class="list"></div>
+        <div id="safeOpenDock" class="safeOpenArt hidden" aria-label="Caja fuerte abierta">
+          <svg viewBox="0 0 280 200" role="img" aria-hidden="true">
+            <defs>
+              <linearGradient id="openBodyDock" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#31415a"/>
+                <stop offset=".52" stop-color="#111827"/>
+                <stop offset="1" stop-color="#05070c"/>
+              </linearGradient>
+              <linearGradient id="openInnerDock" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#07111d"/>
+                <stop offset="1" stop-color="#02040a"/>
+              </linearGradient>
+              <linearGradient id="openDoorDock" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#617da8"/>
+                <stop offset=".45" stop-color="#273a5b"/>
+                <stop offset="1" stop-color="#060911"/>
+              </linearGradient>
+              <linearGradient id="openDoorSideDock" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#060911"/>
+                <stop offset="1" stop-color="#263a5c"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="148" cy="174" rx="94" ry="13" fill="#000" opacity=".30"/>
+            <rect x="42" y="35" width="158" height="120" rx="22" fill="url(#openBodyDock)" stroke="#6aa7ff" stroke-opacity=".45" stroke-width="3"/>
+            <rect x="63" y="55" width="101" height="79" rx="14" fill="url(#openInnerDock)" stroke="#ffffff" stroke-opacity=".13" stroke-width="2"/>
+            <path d="M73 79h76M73 103h60" stroke="#f5c542" stroke-opacity=".72" stroke-width="7" stroke-linecap="round"/>
+            <path d="M172 47 Q176 44 181 46 L235 63 Q240 65 240 71 L240 150 Q240 157 234 156 L181 136 Q172 133 172 124 Z" fill="url(#openDoorSideDock)" opacity=".96"/>
+            <path d="M168 50 Q173 45 180 47 L230 63 Q236 65 236 73 L236 149 Q236 156 229 154 L178 135 Q168 131 168 122 Z" fill="url(#openDoorDock)" stroke="#6aa7ff" stroke-opacity=".55" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M177 59 Q181 57 186 58 L223 70 Q227 72 227 77 L227 140 Q227 144 223 143 L185 129 Q177 126 177 120 Z" fill="none" stroke="#ffffff" stroke-opacity=".14" stroke-width="3" stroke-linejoin="round"/>
+            <ellipse cx="203" cy="101" rx="13" ry="18" fill="#05080f" stroke="#49d49d" stroke-opacity=".75" stroke-width="3"/>
+            <ellipse cx="203" cy="101" rx="5" ry="7" fill="#49d49d"/>
+            <path d="M203 84v34M190 101h26" stroke="#0a120f" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+            <rect x="66" y="155" width="28" height="9" rx="4" fill="#05070c" opacity=".92"/>
+            <rect x="151" y="155" width="28" height="9" rx="4" fill="#05070c" opacity=".92"/>
+          </svg>
+        </div>
+        <div class="actions">
+          <button id="editUnlockedBtn" class="primary hidden" type="button">Editar caja abierta</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="createView" class="grid two hidden">
+      <section>
+        <h2>Nueva caja</h2>
+
+        <label>Nombre</label>
+        <input id="vaultName">
+
+
+        <h3>Preguntas</h3>
+        <div id="questionEditor"></div>
+        <div class="actions">
+          <button id="addQuestionBtn" type="button">Añadir pregunta</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Secretos</h2>
+        <div class="searchBox">
+          <label>Buscar secreto</label>
+          <input id="entrySearch" autocomplete="off">
+        </div>
+        <div id="entryEditor"></div>
+        <div class="splitActions">
+          <div class="actions">
+            <button id="addEntryBtn" type="button">Añadir secreto</button>
+          </div>
+          <div class="actions">
+            <button id="encryptBtn" class="primary" type="button">Guardar caja</button>
+          </div>
+        </div>
+        <div id="createStatus" class="status"></div>
+      </section>
+    </div>
+
+  </main>
+
+  <script>
+    'use strict';
+
+    const $ = (sel) => document.querySelector(sel);
+
+    window.addEventListener('error', (ev) => {
+      const el = document.getElementById('openStatus');
+      if(el) el.textContent = `Error JS: ${ev.message}`;
+    });
+
+    if(!window.isSecureContext || !crypto?.subtle){
+      window.addEventListener('DOMContentLoaded', () => {
+        const msg = 'No abras este archivo con doble clic/file://. WebCrypto necesita http://localhost o HTTPS. Abre una terminal en esta carpeta y usa: python3 -m http.server 8080';
+        const openStatus = document.getElementById('openStatus');
+        const createStatus = document.getElementById('createStatus');
+        if(openStatus) openStatus.textContent = msg;
+        if(createStatus) createStatus.textContent = msg;
+      });
+    }
+
+    const enc = new TextEncoder();
+    const dec = new TextDecoder();
+
+    const FIXED_ITERATIONS = 650000;
+
+    let loadedVault = null;
+    let currentLayer = null;
+    let openedLayers = [];
+    let unlockedVaultData = null;
+
+    const state = {
+      questions: [],
+      entries: []
+    };
+
+    function bytesToBase64(bytes){
+      let bin = '';
+      bytes.forEach(b => bin += String.fromCharCode(b));
+      return btoa(bin);
+    }
+
+    function base64ToBytes(b64){
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+      return bytes;
+    }
+
+    function randomBytes(length){
+      const bytes = new Uint8Array(length);
+      crypto.getRandomValues(bytes);
+      return bytes;
+    }
+
+    function normalizeAnswer(value){
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    async function deriveKey(answer, saltBytes){
+      const material = await crypto.subtle.importKey(
+        'raw',
+        enc.encode(normalizeAnswer(answer)),
+        { name: 'PBKDF2' },
+        false,
+        ['deriveKey']
+      );
+      return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: saltBytes, iterations: FIXED_ITERATIONS, hash: 'SHA-256' },
+        material,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+    }
+
+    async function encryptLayer(question, answer, payload){
+      const salt = randomBytes(16);
+      const iv = randomBytes(12);
+      const key = await deriveKey(answer, salt);
+      const plain = enc.encode(JSON.stringify(payload));
+      const cipher = new Uint8Array(await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, plain));
+      return {
+        question,
+        salt: bytesToBase64(salt),
+        iv: bytesToBase64(iv),
+        ciphertext: bytesToBase64(cipher)
+      };
+    }
+
+    async function decryptLayer(layer, answer){
+      const key = await deriveKey(answer, base64ToBytes(layer.salt));
+      const plain = await crypto.subtle.decrypt(
+        { name:'AES-GCM', iv: base64ToBytes(layer.iv) },
+        key,
+        base64ToBytes(layer.ciphertext)
+      );
+      return JSON.parse(dec.decode(plain));
+    }
+
+    async function buildLayeredVault(name, questions, answers, entries){
+      let payload = { type:'secrets', entries };
+      for(let i = questions.length - 1; i >= 0; i--){
+        payload = await encryptLayer(questions[i], answers[i], payload);
+      }
+      return {
+        format:'layered-question-vault',
+        version:2,
+        name,
+        createdAt:new Date().toISOString(),
+        cipher:{ name:'AES-GCM', length:256 },
+        kdf:{ name:'PBKDF2', hash:'SHA-256', iterations:FIXED_ITERATIONS },
+        layer:payload
+      };
+    }
+
+    function setStatus(el, msg, type){
+      el.className = 'status';
+      if(!msg){ el.innerHTML = ''; return; }
+      el.classList.add(type === 'bad' ? 'notice' : type === 'ok' ? 'notice' : 'muted');
+      if(type === 'bad') el.classList.add('bad');
+      if(type === 'ok') el.classList.add('ok');
+      el.textContent = msg;
+    }
+
+    function setOpenSummary(count){
+      $('#openStatus').className = 'status';
+      $('#openStatus').innerHTML = `<div class="openSummary"><span>Caja abierta</span><small>${count} secreto(s)</small></div>`;
+    }
+
+    function showOpen(){
+      $('#openView').classList.remove('hidden');
+      $('#createView').classList.add('hidden');
+    }
+
+    function showCreate(){
+      $('#openView').classList.add('hidden');
+      $('#createView').classList.remove('hidden');
+    }
+
+    function escapeAttr(s){
+      return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function escapeText(s){
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function renderQuestionEditor(){
+      const box = $('#questionEditor');
+      box.innerHTML = '';
+      if(!state.questions.length) return;
+      state.questions.forEach((q, idx) => {
+        const item = document.createElement('details');
+        item.className = 'qItem';
+        item.innerHTML = `
+          <summary class="qTop">
+            <strong>Capa ${idx + 1}</strong>
+            <span class="foldHint"></span>
+            <button class="small danger" type="button" data-remove-q="${idx}">Eliminar</button>
+          </summary>
+          <label>Pregunta visible en esta capa</label>
+          <input data-q="${idx}" data-field="question" value="${escapeAttr(q.question)}">
+          <label>Respuesta que abre la siguiente capa</label>
+          <input data-q="${idx}" data-field="answer" value="${escapeAttr(q.answer)}">
+        `;
+        box.appendChild(item);
+      });
+      box.querySelectorAll('input[data-q]').forEach(input => {
+        input.addEventListener('input', () => {
+          const idx = Number(input.dataset.q);
+          state.questions[idx][input.dataset.field] = input.value;
+        });
+      });
+      box.querySelectorAll('[data-remove-q]').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          state.questions.splice(Number(btn.dataset.removeQ), 1);
+          renderQuestionEditor();
+        });
+      });
+      box.querySelectorAll('details').forEach(detail => {
+        detail.addEventListener('toggle', () => {
+          const hint = detail.querySelector('.foldHint');
+          if(hint) hint.textContent = detail.open ? 'Cerrar' : 'Abrir';
+          if(detail.open){
+            box.querySelectorAll('details').forEach(other => {
+              if(other !== detail){
+                other.open = false;
+                const otherHint = other.querySelector('.foldHint');
+                if(otherHint) otherHint.textContent = 'Abrir';
+              }
+            });
+            setTimeout(() => detail.scrollIntoView({ block:'center', behavior:'smooth' }), 0);
+          }
+        });
+      });
+    }
+
+    function renderEntryEditor(){
+      const box = $('#entryEditor');
+      box.innerHTML = '';
+      if(!state.entries.length) return;
+      const q = normalizeAnswer($('#entrySearch')?.value || '');
+      const visibleIndexes = state.entries
+        .map((entry, idx) => ({ entry, idx }))
+        .filter(({ entry }) => {
+          const service = normalizeAnswer(entry.title || '');
+          const user = normalizeAnswer(entry.user || '');
+          return !q || service.includes(q) || user.includes(q);
+        })
+        .sort((a, b) => String(a.entry.title || '').localeCompare(String(b.entry.title || ''), 'es', { sensitivity:'base' }));
+      if(!visibleIndexes.length){
+        box.innerHTML = '<div class="empty">Sin resultados.</div>';
+        return;
+      }
+      visibleIndexes.forEach(({ entry:e, idx }) => {
+        const item = document.createElement('details');
+        item.className = 'entryItem';
+        item.innerHTML = `
+          <summary class="qTop">
+            <strong>${escapeText(e.title || `Secreto ${idx + 1}`)}</strong>
+            <span class="foldHint"></span>
+            <button class="small danger" type="button" data-remove-entry="${idx}">Eliminar</button>
+          </summary>
+          <label>Servicio</label>
+          <input data-entry="${idx}" data-field="title" value="${escapeAttr(e.title)}">
+          <div class="row cols2">
+            <div>
+              <label>Usuario</label>
+              <input data-entry="${idx}" data-field="user" value="${escapeAttr(e.user)}">
+            </div>
+            <div>
+              <label>Clave</label>
+              <input data-entry="${idx}" data-field="password" value="${escapeAttr(e.password)}">
+            </div>
+          </div>
+          <label>Notas</label>
+          <textarea data-entry="${idx}" data-field="notes">${escapeText(e.notes)}</textarea>
+        `;
+        box.appendChild(item);
+      });
+      box.querySelectorAll('[data-entry]').forEach(input => {
+        input.addEventListener('input', () => {
+          const idx = Number(input.dataset.entry);
+          state.entries[idx][input.dataset.field] = input.value;
+        });
+      });
+      // Update the <strong> in summary when title is edited
+      box.querySelectorAll('input[data-field="title"]').forEach(input => {
+        input.addEventListener('input', () => {
+          const idx = Number(input.dataset.entry);
+          const title = state.entries[idx].title.trim() || `Secreto ${idx + 1}`;
+          const strong = input.closest('details')?.querySelector('summary strong');
+          if(strong) strong.textContent = title;
+        });
+      });
+      box.querySelectorAll('[data-remove-entry]').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          state.entries.splice(Number(btn.dataset.removeEntry), 1);
+          renderEntryEditor();
+        });
+      });
+      box.querySelectorAll('details').forEach(detail => {
+        detail.addEventListener('toggle', () => {
+          const hint = detail.querySelector('.foldHint');
+          if(hint) hint.textContent = detail.open ? 'Cerrar' : 'Abrir';
+          if(detail.open){
+            box.querySelectorAll('details').forEach(other => {
+              if(other !== detail){
+                other.open = false;
+                const otherHint = other.querySelector('.foldHint');
+                if(otherHint) otherHint.textContent = 'Abrir';
+              }
+            });
+            setTimeout(() => detail.scrollIntoView({ block:'center', behavior:'smooth' }), 0);
+          }
+        });
+      });
+    }
+
+    function downloadJson(obj, name){
+      const blob = new Blob([JSON.stringify(obj, null, 2)], { type:'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function renderCurrentLayerQuestion(layer){
+      const box = $('#openQuestions');
+      box.innerHTML = `
+        <label>${escapeText(layer.question || 'Pregunta')}</label>
+        <input id="layerAnswer" autocomplete="off">
+      `;
+      $('#questionsBox').classList.remove('hidden');
+      const input = $('#layerAnswer');
+      input?.addEventListener('keydown', (ev) => {
+        if(ev.key === 'Enter') $('#decryptBtn').click();
+      });
+      setTimeout(() => input?.focus(), 0);
+    }
+
+    function renderDecrypted(payload){
+      const detailBox = $('#decryptedList');
+      const serviceList = $('#serviceList');
+      const search = $('#secretSearch');
+      detailBox.innerHTML = '';
+      serviceList.innerHTML = '';
+
+      const entries = (Array.isArray(payload.entries) ? payload.entries : [])
+        .map((e, originalIndex) => ({ ...e, originalIndex }))
+        .sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'es', { sensitivity:'base' }));
+
+      $('#decryptedInfo').textContent = '';
+      setOpenSummary(entries.length);
+      $('#editUnlockedBtn').classList.toggle('hidden', !unlockedVaultData);
+      $('#modeSwitchBtn').classList.toggle('hidden', !unlockedVaultData);
+      $('#modeSwitchBtn').textContent = 'Editar';
+      $('#openFileBtn').classList.add('hidden');
+      $('#fileInfo').classList.add('hidden');
+      $('#resultsPanel').classList.remove('hidden');
+      $('#safeOpenDock').classList.remove('hidden');
+
+      if(!entries.length){
+        serviceList.innerHTML = '<div class="empty">Sin entradas.</div>';
+        return;
+      }
+
+      let selectedIndex = 0;
+
+      function renderDetail(entry){
+        detailBox.innerHTML = `
+          <div class="card">
+            <div class="cardHead">
+              <div class="cardTitle">${escapeText(entry.title || 'Sin servicio')}</div>
+              <button class="small" type="button" id="copySelectedPass">Copiar clave</button>
+            </div>
+            <label>Servicio</label>
+            <div class="secret">${escapeText(entry.title || '')}</div>
+            <label>Usuario</label>
+            <div class="secret">${escapeText(entry.user || '')}</div>
+            <label>Clave</label>
+            <div class="secret">${escapeText(entry.password || '')}</div>
+            ${entry.notes ? `<label>Notas</label><div class="secret">${escapeText(entry.notes)}</div>` : ''}
+          </div>
+        `;
+        $('#copySelectedPass').addEventListener('click', async () => {
+          const btn = $('#copySelectedPass');
+          try{
+            await navigator.clipboard.writeText(entry.password || '');
+            btn.textContent = 'Copiada';
+            setTimeout(() => btn.textContent = 'Copiar clave', 1200);
+          }catch{
+            btn.textContent = 'Error';
+            setTimeout(() => btn.textContent = 'Copiar clave', 1200);
+          }
+        });
+      }
+
+      function renderList(){
+        const q = normalizeAnswer(search.value);
+        const filtered = entries.filter(e => {
+          const service = normalizeAnswer(e.title || '');
+          const user = normalizeAnswer(e.user || '');
+          return !q || service.includes(q) || user.includes(q);
+        });
+
+        serviceList.innerHTML = '';
+        if(!filtered.length){
+          detailBox.innerHTML = '';
+          serviceList.innerHTML = '<div class="empty">Sin resultados.</div>';
+          return;
+        }
+
+        if(!filtered[selectedIndex]) selectedIndex = 0;
+
+        filtered.forEach((entry, idx) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `serviceBtn${idx === selectedIndex ? ' active' : ''}`;
+          btn.innerHTML = `<span>${escapeText(entry.title || 'Sin servicio')}</span><small>Ver</small>`;
+          btn.addEventListener('click', () => {
+            selectedIndex = idx;
+            renderList();
+            renderDetail(entry);
+          });
+          serviceList.appendChild(btn);
+        });
+
+        renderDetail(filtered[selectedIndex]);
+      }
+
+      search.value = '';
+      search.addEventListener('input', () => {
+        selectedIndex = 0;
+        renderList();
+      });
+      renderList();
+    }
+
+    function validateCreate(){
+      const questions = state.questions.map(q => ({ question:q.question.trim(), answer:q.answer }));
+      if(!questions.length) return 'Añade al menos una pregunta.';
+      if(questions.some(q => !q.question)) return 'Falta texto en alguna pregunta.';
+      if(questions.some(q => !normalizeAnswer(q.answer))) return 'Falta alguna respuesta.';
+      const entries = state.entries.filter(e => e.title.trim() || e.user.trim() || e.password.trim() || e.notes.trim());
+      if(!entries.length) return 'Añade al menos un secreto.';
+      return '';
+    }
+
+    function resetAll(){
+      loadedVault = null;
+      currentLayer = null;
+      openedLayers = [];
+      unlockedVaultData = null;
+      state.questions = [];
+      state.entries = [];
+      $('#vaultName').value = '';
+      $('#vaultFile').value = '';
+      $('#modeSwitchBtn').classList.add('hidden');
+      $('#modeSwitchBtn').textContent = 'Editar';
+      $('#entrySearch').value = '';
+      $('#fileInfo').textContent = '';
+      $('#fileInfo').classList.remove('hidden');
+      $('#openFileBtn').classList.remove('hidden');
+      $('#resultsPanel').classList.add('hidden');
+      $('#serviceList').innerHTML = '';
+      $('#secretSearch').value = '';
+      $('#questionsBox').classList.add('hidden');
+      $('#openQuestions').innerHTML = '';
+      $('#decryptedList').innerHTML = '';
+      $('#rightCardTitle').textContent = 'Crear caja';
+      $('#decryptedInfo').textContent = 'Caja cerrada.';
+      $('#decryptedInfo').classList.add('hidden');
+      $('#safeClosedArt').classList.add('hidden');
+      $('#safeOpenDock').classList.add('hidden');
+      $('#editUnlockedBtn').classList.add('hidden');
+      $('#createLauncher').classList.remove('hidden');
+      renderQuestionEditor();
+      renderEntryEditor();
+      setStatus($('#createStatus'), '', '');
+      setStatus($('#openStatus'), '', '');
+      showOpen();
+    }
+
+    $('#startCreateBtn').addEventListener('click', showCreate);
+    $('#resetAllBtn').addEventListener('click', resetAll);
+
+    $('#addQuestionBtn').addEventListener('click', () => {
+      state.questions.push({ question:'', answer:'' });
+      renderQuestionEditor();
+      const details = $('#questionEditor').querySelectorAll('details');
+      const last = details[details.length - 1];
+      if(last){
+        last.open = true;
+        const hint = last.querySelector('.foldHint');
+        if(hint) hint.textContent = 'Cerrar';
+      }
+    });
+
+    $('#addEntryBtn').addEventListener('click', () => {
+      state.entries.push({ title:'', user:'', password:'', notes:'' });
+      renderEntryEditor();
+      const details = $('#entryEditor').querySelectorAll('details');
+      const last = details[details.length - 1];
+      if(last){
+        last.open = true;
+        const hint = last.querySelector('.foldHint');
+        if(hint) hint.textContent = 'Cerrar';
+      }
+    });
+
+    function loadUnlockedIntoEditor(){
+      if(!unlockedVaultData) return;
+      state.questions = unlockedVaultData.questions.map(q => ({ question:q.question || '', answer:q.answer || '' }));
+      state.entries = unlockedVaultData.entries.map(e => ({
+        title:e.title || '',
+        user:e.user || '',
+        password:e.password || '',
+        notes:e.notes || ''
+      }));
+      $('#vaultName').value = unlockedVaultData.name || '';
+      $('#entrySearch').value = '';
+      renderQuestionEditor();
+      renderEntryEditor();
+      $('#modeSwitchBtn').classList.remove('hidden');
+      $('#modeSwitchBtn').textContent = 'Vista';
+      setStatus($('#createStatus'), '', '');
+      showCreate();
+    }
+
+    $('#editUnlockedBtn').addEventListener('click', loadUnlockedIntoEditor);
+    $('#modeSwitchBtn').addEventListener('click', () => {
+      if(!unlockedVaultData) return;
+      if($('#createView').classList.contains('hidden')){
+        loadUnlockedIntoEditor();
+        return;
+      }
+      unlockedVaultData.name = $('#vaultName').value || unlockedVaultData.name || '';
+      unlockedVaultData.questions = state.questions.map(q => ({
+        question:q.question || '',
+        answer:q.answer || ''
+      }));
+      unlockedVaultData.entries = state.entries.map(e => ({
+        title:e.title || '',
+        user:e.user || '',
+        password:e.password || '',
+        notes:e.notes || ''
+      }));
+      $('#modeSwitchBtn').textContent = 'Editar';
+      setStatus($('#createStatus'), '', '');
+      showOpen();
+      renderDecrypted({ type:'secrets', entries:unlockedVaultData.entries });
+    });
+
+    $('#encryptBtn').addEventListener('click', async () => {
+      const error = validateCreate();
+      if(error){ setStatus($('#createStatus'), error, 'bad'); return; }
+      setStatus($('#createStatus'), 'Cifrando por capas...', '');
+      try{
+        const name = $('#vaultName').value.trim() || 'Caja segura';
+        const questions = state.questions.map(q => q.question.trim());
+        const answers = state.questions.map(q => q.answer);
+        const entries = state.entries
+          .filter(e => e.title.trim() || e.user.trim() || e.password.trim() || e.notes.trim())
+          .map(e => ({ title:e.title, user:e.user, password:e.password, notes:e.notes }));
+        const vault = await buildLayeredVault(name, questions, answers, entries);
+        const safe = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'caja_segura';
+        downloadJson(vault, `${safe}.vault.json`);
+        setStatus($('#createStatus'), 'Caja guardada por capas.', 'ok');
+      }catch(err){
+        console.error(err);
+        setStatus($('#createStatus'), 'No se pudo cifrar.', 'bad');
+      }
+    });
+
+    $('#vaultFile').addEventListener('change', async (ev) => {
+      const file = ev.target.files && ev.target.files[0];
+      loadedVault = null;
+      currentLayer = null;
+      openedLayers = [];
+      unlockedVaultData = null;
+      $('#modeSwitchBtn').classList.add('hidden');
+      $('#modeSwitchBtn').textContent = 'Editar';
+      $('#editUnlockedBtn').classList.add('hidden');
+      $('#fileInfo').classList.remove('hidden');
+      $('#openFileBtn').classList.remove('hidden');
+      $('#resultsPanel').classList.add('hidden');
+      $('#serviceList').innerHTML = '';
+      $('#secretSearch').value = '';
+      $('#questionsBox').classList.add('hidden');
+      $('#openQuestions').innerHTML = '';
+      $('#decryptedList').innerHTML = '';
+      $('#rightCardTitle').textContent = 'Contenido';
+      $('#decryptedInfo').textContent = '';
+      $('#decryptedInfo').classList.add('hidden');
+      $('#safeClosedArt').classList.remove('hidden');
+      $('#safeOpenDock').classList.add('hidden');
+      setStatus($('#openStatus'), '', '');
+      if(!file){
+        $('#fileInfo').textContent = '';
+        $('#rightCardTitle').textContent = 'Crear caja';
+        $('#decryptedInfo').classList.add('hidden');
+        $('#safeClosedArt').classList.add('hidden');
+        $('#safeOpenDock').classList.add('hidden');
+        $('#createLauncher').classList.remove('hidden');
+        $('#openFileBtn').classList.remove('hidden');
+        $('#fileInfo').classList.remove('hidden');
+        $('#resultsPanel').classList.add('hidden');
+        return;
+      }
+      try{
+        const text = await file.text();
+        const vault = JSON.parse(text);
+        if(vault.format !== 'layered-question-vault' || vault.version !== 2 || !vault.layer){
+          throw new Error('Formato no reconocido');
+        }
+        loadedVault = vault;
+        currentLayer = vault.layer;
+        $('#fileInfo').innerHTML = `<span class="pill">${escapeText(file.name)}</span>`;
+        $('#openFileBtn').classList.add('hidden');
+        renderCurrentLayerQuestion(currentLayer);
+        $('#createLauncher').classList.add('hidden');
+      }catch(err){
+        console.error(err);
+        $('#fileInfo').textContent = '';
+        $('#rightCardTitle').textContent = 'Crear caja';
+        $('#decryptedInfo').classList.add('hidden');
+        $('#safeClosedArt').classList.add('hidden');
+        $('#safeOpenDock').classList.add('hidden');
+        $('#createLauncher').classList.remove('hidden');
+        $('#openFileBtn').classList.remove('hidden');
+        $('#fileInfo').classList.remove('hidden');
+        $('#resultsPanel').classList.add('hidden');
+        setStatus($('#openStatus'), 'Archivo no válido.', 'bad');
+      }
+    });
+
+    $('#decryptBtn').addEventListener('click', async () => {
+      if(!loadedVault || !currentLayer){ setStatus($('#openStatus'), 'Elige un archivo.', 'bad'); return; }
+      const input = $('#layerAnswer');
+      const answer = input ? input.value : '';
+      if(!normalizeAnswer(answer)){ setStatus($('#openStatus'), 'Falta respuesta.', 'bad'); return; }
+      setStatus($('#openStatus'), 'Abriendo capa...', '');
+      try{
+        const layerBeingOpened = currentLayer;
+        const payload = await decryptLayer(layerBeingOpened, answer);
+        openedLayers.push({ question: layerBeingOpened.question || '', answer });
+        if(payload && payload.type === 'secrets'){
+          currentLayer = null;
+          unlockedVaultData = {
+            name: loadedVault?.name || '',
+            questions: openedLayers.map(x => ({ question:x.question, answer:x.answer })),
+            entries: Array.isArray(payload.entries) ? payload.entries : []
+          };
+          $('#questionsBox').classList.add('hidden');
+          $('#openQuestions').innerHTML = '';
+          $('#rightCardTitle').textContent = 'Contenido';
+          $('#decryptedInfo').classList.remove('hidden');
+          $('#safeClosedArt').classList.add('hidden');
+          renderDecrypted(payload);
+          setOpenSummary(unlockedVaultData.entries.length);
+          return;
+        }
+        if(payload && payload.question && payload.salt && payload.iv && payload.ciphertext){
+          currentLayer = payload;
+          renderCurrentLayerQuestion(currentLayer);
+          setStatus($('#openStatus'), 'Capa abierta. Sigue.', 'ok');
+          return;
+        }
+        throw new Error('Capa inválida');
+      }catch(err){
+        console.error(err);
+        setStatus($('#openStatus'), 'Respuesta incorrecta o archivo dañado.', 'bad');
+      }
+    });
+
+    $('#entrySearch').addEventListener('input', renderEntryEditor);
+    renderQuestionEditor();
+    renderEntryEditor();
+
+    // Limpieza temporal: elimina service workers y cachés anteriores que puedan estar sirviendo una versión rota.
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => registration.unregister());
+      });
+    }
+    if('caches' in window){
+      caches.keys().then((keys) => {
+        keys.forEach((key) => caches.delete(key));
+      });
+    }
+  </script>
+</body>
+</html>
