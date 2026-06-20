@@ -489,6 +489,18 @@
 
     const FIXED_ITERATIONS = 650000;
 
+    const APP_GATE_ANSWER = 'safe-box-internal-gate-v1-7c5f9d3b';
+
+    async function wrapWithAppGate(payload){
+      const layer = await encryptLayer('', APP_GATE_ANSWER, payload);
+      delete layer.question;
+      return layer;
+    }
+
+    async function openAppGate(layer){
+      return decryptLayer(layer, APP_GATE_ANSWER);
+    }
+
     let loadedVault = null;
     let currentLayer = null;
     let openedLayers = [];
@@ -512,6 +524,47 @@
       return bytes;
     }
 
+    function concatBytes(parts){
+      const total = parts.reduce((sum, part) => sum + part.length, 0);
+      const out = new Uint8Array(total);
+      let offset = 0;
+      parts.forEach(part => {
+        out.set(part, offset);
+        offset += part.length;
+      });
+      return out;
+    }
+
+    function packOpaqueLayer(layer){
+      const salt = base64ToBytes(layer.salt);
+      const iv = base64ToBytes(layer.iv);
+      const cipher = base64ToBytes(layer.ciphertext);
+      return bytesToBase64(concatBytes([salt, iv, cipher]));
+    }
+
+    function unpackOpaqueLayer(data){
+      const bytes = base64ToBytes(data);
+      if(bytes.length >= 5 && bytes[0] === 83 && bytes[1] === 66 && bytes[2] === 4){
+        const saltLen = bytes[3];
+        const ivLen = bytes[4];
+        const saltStart = 5;
+        const ivStart = saltStart + saltLen;
+        const cipherStart = ivStart + ivLen;
+        if(bytes.length <= cipherStart) throw new Error('Blob incompleto');
+        return {
+          salt: bytesToBase64(bytes.slice(saltStart, ivStart)),
+          iv: bytesToBase64(bytes.slice(ivStart, cipherStart)),
+          ciphertext: bytesToBase64(bytes.slice(cipherStart))
+        };
+      }
+      if(bytes.length <= 28) throw new Error('Blob incompleto');
+      return {
+        salt: bytesToBase64(bytes.slice(0, 16)),
+        iv: bytesToBase64(bytes.slice(16, 28)),
+        ciphertext: bytesToBase64(bytes.slice(28))
+      };
+    }
+
     function randomBytes(length){
       const bytes = new Uint8Array(length);
       crypto.getRandomValues(bytes);
@@ -524,6 +577,15 @@
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function getQuestionAnswers(q){
+      const answers = [q.answer || '', q.answer2 || '', ...(Array.isArray(q.answers) ? q.answers : [])];
+      return answers.filter(value => normalizeAnswer(value));
+    }
+
+    function makeLayerAnswer(...answers){
+      return answers.filter(value => normalizeAnswer(value)).join('\u241f');
     }
 
     async function deriveKey(answer, saltBytes){
@@ -543,18 +605,20 @@
       );
     }
 
-    async function encryptLayer(question, answer, payload){
+    async function encryptLayer(question, answer, payload, answerCount=1){
       const salt = randomBytes(16);
       const iv = randomBytes(12);
       const key = await deriveKey(answer, salt);
       const plain = enc.encode(JSON.stringify(payload));
       const cipher = new Uint8Array(await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, plain));
-      return {
+      const layer = {
         question,
         salt: bytesToBase64(salt),
         iv: bytesToBase64(iv),
         ciphertext: bytesToBase64(cipher)
       };
+      if(answerCount > 1) layer.answers = answerCount;
+      return layer;
     }
 
     async function decryptLayer(layer, answer){
@@ -570,16 +634,11 @@
     async function buildLayeredVault(name, questions, answers, entries){
       let payload = { type:'secrets', entries };
       for(let i = questions.length - 1; i >= 0; i--){
-        payload = await encryptLayer(questions[i], answers[i], payload);
+        const parts = Array.isArray(answers[i]) ? answers[i].filter(value => normalizeAnswer(value)) : [answers[i]];
+        payload = await encryptLayer(questions[i], makeLayerAnswer(...parts), payload, parts.length);
       }
       return {
-        format:'layered-question-vault',
-        version:2,
-        name,
-        createdAt:new Date().toISOString(),
-        cipher:{ name:'AES-GCM', length:256 },
-        kdf:{ name:'PBKDF2', hash:'SHA-256', iterations:FIXED_ITERATIONS },
-        layer:payload
+        data: packOpaqueLayer(await wrapWithAppGate(payload))
       };
     }
 
@@ -623,6 +682,10 @@
       state.questions.forEach((q, idx) => {
         const item = document.createElement('details');
         item.className = 'qItem';
+        const rawExtraAnswers = [q.answer2 || '', ...(Array.isArray(q.answers) ? q.answers : [])];
+        const lastFilledExtra = rawExtraAnswers.reduce((last, answer, answerIdx) => normalizeAnswer(answer) ? answerIdx : last, -1);
+        const visibleExtraCount = Math.max(Number(q.extraAnswersVisible || 0), lastFilledExtra + 1);
+        const visibleExtraAnswers = rawExtraAnswers.slice(0, visibleExtraCount);
         item.innerHTML = `
           <summary class="qTop">
             <strong>Capa ${idx + 1}</strong>
@@ -631,22 +694,80 @@
           </summary>
           <label>Pregunta visible en esta capa</label>
           <input data-q="${idx}" data-field="question" value="${escapeAttr(q.question)}">
-          <label>Respuesta que abre la siguiente capa</label>
+          <label>Primera respuesta</label>
           <input data-q="${idx}" data-field="answer" value="${escapeAttr(q.answer)}">
+          ${visibleExtraAnswers.map((answer, extraIdx) => `
+            <label>Respuesta ${extraIdx + 2}</label>
+            <div class="row cols2">
+              <input data-q="${idx}" data-extra-answer="${extraIdx}" value="${escapeAttr(answer)}">
+              <button class="small danger" type="button" data-remove-answer="${idx}" data-answer-extra="${extraIdx}">Borrar</button>
+            </div>
+          `).join('')}
+          <div class="actions">
+            <button class="small" type="button" data-add-answer="${idx}">Añadir otra respuesta</button>
+          </div>
         `;
         box.appendChild(item);
       });
-      box.querySelectorAll('input[data-q]').forEach(input => {
+      box.querySelectorAll('input[data-q][data-field]').forEach(input => {
         input.addEventListener('input', () => {
           const idx = Number(input.dataset.q);
           state.questions[idx][input.dataset.field] = input.value;
+        });
+      });
+      box.querySelectorAll('input[data-extra-answer]').forEach(input => {
+        input.addEventListener('input', () => {
+          const idx = Number(input.dataset.q);
+          const extraIdx = Number(input.dataset.extraAnswer);
+          if(extraIdx === 0){
+            state.questions[idx].answer2 = input.value;
+            return;
+          }
+          if(!Array.isArray(state.questions[idx].answers)) state.questions[idx].answers = [];
+          state.questions[idx].answers[extraIdx - 1] = input.value;
+        });
+      });
+      box.querySelectorAll('[data-add-answer]').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          const idx = Number(btn.dataset.addAnswer);
+          const q = state.questions[idx];
+          const rawExtraAnswers = [q.answer2 || '', ...(Array.isArray(q.answers) ? q.answers : [])];
+          const lastFilledExtra = rawExtraAnswers.reduce((last, answer, answerIdx) => normalizeAnswer(answer) ? answerIdx : last, -1);
+          q.extraAnswersVisible = Math.max(Number(q.extraAnswersVisible || 0), lastFilledExtra + 1) + 1;
+          if(!Array.isArray(q.answers)) q.answers = [];
+          while(q.answers.length < Math.max(0, q.extraAnswersVisible - 1)) q.answers.push('');
+          renderQuestionEditor();
+          const details = $('#questionEditor').querySelectorAll('details')[idx];
+          if(details) details.open = true;
+        });
+      });
+      box.querySelectorAll('[data-remove-answer]').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          const idx = Number(btn.dataset.removeAnswer);
+          const extraIdx = Number(btn.dataset.answerExtra);
+          const q = state.questions[idx];
+          const extras = [q.answer2 || '', ...(Array.isArray(q.answers) ? q.answers : [])];
+          extras.splice(extraIdx, 1);
+          q.answer2 = extras[0] || '';
+          q.answers = extras.slice(1);
+          q.extraAnswersVisible = Math.max(0, extras.length);
+          renderQuestionEditor();
+          const details = $('#questionEditor').querySelectorAll('details')[idx];
+          if(details) details.open = true;
         });
       });
       box.querySelectorAll('[data-remove-q]').forEach(btn => {
         btn.addEventListener('click', (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
-          state.questions.splice(Number(btn.dataset.removeQ), 1);
+          const idx = Number(btn.dataset.removeQ);
+          const title = state.questions[idx]?.question?.trim() || `Capa ${idx + 1}`;
+          if(!confirm(`¿Eliminar la pregunta/capa "${title}"?`)) return;
+          state.questions.splice(idx, 1);
           renderQuestionEditor();
         });
       });
@@ -776,16 +897,25 @@
 
     function renderCurrentLayerQuestion(layer){
       const box = $('#openQuestions');
+      const answerCount = Number(layer.answers || (layer.double ? 2 : 1));
+      const labels = ['Primera respuesta', 'Segunda respuesta'];
+      const inputs = Array.from({ length: answerCount }, (_, idx) => `
+        <label>${labels[idx] || `Respuesta ${idx + 1}`}</label>
+        <input class="layerAnswerInput" data-answer-index="${idx}" autocomplete="off">
+      `).join('');
       box.innerHTML = `
-        <label>${escapeText(layer.question || 'Pregunta')}</label>
-        <input id="layerAnswer" autocomplete="off">
+        <label>Pregunta</label>
+        <div class="secret">${escapeText(layer.question || 'Pregunta')}</div>
+        ${inputs}
       `;
       $('#questionsBox').classList.remove('hidden');
-      const input = $('#layerAnswer');
-      input?.addEventListener('keydown', (ev) => {
-        if(ev.key === 'Enter') $('#decryptBtn').click();
+      const inputsEls = [...box.querySelectorAll('.layerAnswerInput')];
+      inputsEls.forEach(el => {
+        el.addEventListener('keydown', (ev) => {
+          if(ev.key === 'Enter') $('#decryptBtn').click();
+        });
       });
-      setTimeout(() => input?.focus(), 0);
+      setTimeout(() => inputsEls[0]?.focus(), 0);
     }
 
     function renderDecrypted(payload){
@@ -942,7 +1072,7 @@
     $('#resetAllBtn').addEventListener('click', resetAll);
 
     $('#addQuestionBtn').addEventListener('click', () => {
-      state.questions.push({ question:'', answer:'' });
+      state.questions.push({ question:'', answer:'', answer2:'' });
       renderQuestionEditor();
       const details = $('#questionEditor').querySelectorAll('details');
       const last = details[details.length - 1];
@@ -967,7 +1097,7 @@
 
     function loadUnlockedIntoEditor(){
       if(!unlockedVaultData) return;
-      state.questions = unlockedVaultData.questions.map(q => ({ question:q.question || '', answer:q.answer || '' }));
+      state.questions = unlockedVaultData.questions.map(q => ({ question:q.question || '', answer:q.answer || '', answer2:q.answer2 || '', answers:Array.isArray(q.answers) ? q.answers : [] }));
       state.entries = unlockedVaultData.entries.map(e => ({
         title:e.title || '',
         user:e.user || '',
@@ -994,7 +1124,9 @@
       unlockedVaultData.name = $('#vaultName').value || unlockedVaultData.name || '';
       unlockedVaultData.questions = state.questions.map(q => ({
         question:q.question || '',
-        answer:q.answer || ''
+        answer:q.answer || '',
+        answer2:q.answer2 || '',
+        answers:Array.isArray(q.answers) ? q.answers : []
       }));
       unlockedVaultData.entries = state.entries.map(e => ({
         title:e.title || '',
@@ -1015,7 +1147,7 @@
       try{
         const name = $('#vaultName').value.trim() || 'Safe box';
         const questions = state.questions.map(q => q.question.trim());
-        const answers = state.questions.map(q => q.answer);
+        const answers = state.questions.map(q => getQuestionAnswers(q));
         const entries = state.entries
           .filter(e => e.title.trim() || e.user.trim() || e.password.trim() || e.notes.trim())
           .map(e => ({ title:e.title, user:e.user, password:e.password, notes:e.notes }));
@@ -1068,11 +1200,16 @@
       try{
         const text = await file.text();
         const vault = JSON.parse(text);
-        if(vault.format !== 'layered-question-vault' || vault.version !== 2 || !vault.layer){
-          throw new Error('Formato no reconocido');
+        if(typeof vault.data === 'string'){
+          loadedVault = { version:4, appGate:true, layer:unpackOpaqueLayer(vault.data) };
+          currentLayer = await openAppGate(loadedVault.layer);
+        }else{
+          if(vault.format !== 'layered-question-vault' || ![2,3].includes(vault.version) || !vault.layer){
+            throw new Error('Formato no reconocido');
+          }
+          loadedVault = vault;
+          currentLayer = vault.version === 3 && vault.appGate ? await openAppGate(vault.layer) : vault.layer;
         }
-        loadedVault = vault;
-        currentLayer = vault.layer;
         $('#fileInfo').innerHTML = `<span class="pill">${escapeText(file.name)}</span>`;
         $('#openFileBtn').classList.add('hidden');
         renderCurrentLayerQuestion(currentLayer);
@@ -1094,19 +1231,21 @@
 
     $('#decryptBtn').addEventListener('click', async () => {
       if(!loadedVault || !currentLayer){ setStatus($('#openStatus'), 'Elige un archivo.', 'bad'); return; }
-      const input = $('#layerAnswer');
-      const answer = input ? input.value : '';
-      if(!normalizeAnswer(answer)){ setStatus($('#openStatus'), 'Falta respuesta.', 'bad'); return; }
+      const answerValues = [...document.querySelectorAll('.layerAnswerInput')].map(input => input.value);
+      if(!answerValues.length || answerValues.some(value => !normalizeAnswer(value))){
+        setStatus($('#openStatus'), 'Falta alguna respuesta.', 'bad');
+        return;
+      }
       setStatus($('#openStatus'), 'Abriendo capa...', '');
       try{
         const layerBeingOpened = currentLayer;
-        const payload = await decryptLayer(layerBeingOpened, answer);
-        openedLayers.push({ question: layerBeingOpened.question || '', answer });
+        const payload = await decryptLayer(layerBeingOpened, makeLayerAnswer(...answerValues));
+        openedLayers.push({ question: layerBeingOpened.question || '', answer:answerValues[0] || '', answer2:answerValues[1] || '', answers:answerValues.slice(2) });
         if(payload && payload.type === 'secrets'){
           currentLayer = null;
           unlockedVaultData = {
             name: loadedVault?.name || '',
-            questions: openedLayers.map(x => ({ question:x.question, answer:x.answer })),
+            questions: openedLayers.map(x => ({ question:x.question, answer:x.answer, answer2:x.answer2 || '', answers:Array.isArray(x.answers) ? x.answers : [] })),
             entries: Array.isArray(payload.entries) ? payload.entries : []
           };
           $('#questionsBox').classList.add('hidden');
